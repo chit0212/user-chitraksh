@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>14-Day Challenge Tracker – Personalized</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gradient-primary: linear-gradient(135deg, #00ff88 0%, #4ecdc4 100%);
+      --background: #121212;
+      --surface: #1e1e1e;
+      --text-primary: #ffffff;
+      --accent: #00ff88;
+      --radius-lg: 24px;
+      --radius-md: 12px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 24px;
+    }
+    /* Top Bar */
+    .top-bar {
+      grid-row: 1;
+      grid-column: 1 / -1;
+      background: rgba(30,30,30,0.8);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-md);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+    .left-top, .right-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    /* (Streak logo removed) */
+    /* Race track in top bar */
+    .top-race-track {
+      position: relative;
+      width: 200px;
+      height: 50px;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .top-race-track .character {
+      position: absolute;
+      left: -50px;
+      top: 50%;
+      transform: translateY(-50%) scaleX(-1);
+      font-size: 32px;
+      transition: left 0.6s ease;
+    }
+    /* Hydration Quote, Money Info & Digital Clock */
+    .hydration-quote {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .money-info {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .clock {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-left: 8px;
+    }
+    /* Reward Status and Report Buttons */
+    .reward-status-btn, .report-btn {
+      background: var(--surface);
+      color: var(--text-primary);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: background 0.3s ease;
+    }
+    .reward-status-btn:hover, .report-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .report-btn {
+      margin-left: 8px;
+    }
+    /* Theme Dropdown */
+    .theme-container {
+      position: relative;
+      display: inline-block;
+    }
+    .theme-btn {
+      background: var(--gradient-primary);
+      color: #121212;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.3s ease;
+    }
+    .theme-btn:hover { transform: translateY(-2px); }
+    .theme-btn:active { transform: translateY(0); }
+    .theme-dropdown {
+      position: absolute;
+      right: 0;
+      top: 110%;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 8px 0;
+      width: 150px;
+      box-shadow: var(--shadow);
+      display: none;
+      z-index: 10;
+    }
+    .theme-dropdown.active {
+      display: block;
+    }
+    .theme-option {
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .theme-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease forwards;
+    }
+    .modal-content {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 400px;
+      text-align: left;
+      animation: slideIn 0.3s ease forwards;
+    }
+    .modal-header {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .modal-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+    .modal-close {
+      background: var(--gradient-primary);
+      color: #121212;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      display: block;
+      margin: 0 auto;
+    }
+    /* Incomplete Tasks Modal */
+    .incomplete-modal {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      animation: slideIn 0.3s ease forwards;
+    }
+    /* Report Modal */
+    .report-modal {
+      background: var(--surface);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      animation: slideIn 0.3s ease forwards;
+    }
+    /* Main Container Layout */
+    .container {
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      grid-template-areas: 
+        "sidebar center right";
+      gap: 24px;
+    }
+    /* Left Panel: Progress, Calendar, Quote & Note */
+    .left-panel {
+      grid-area: sidebar;
+      background: rgba(30,30,30,0.6);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+    .progress-container {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .progress-bar {
+      height: 16px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--gradient-primary);
+      width: 0%;
+      transition: width 0.6s ease;
+      border-radius: 999px;
+    }
+    .calendar-container {
+      width: 100%;
+      height: 200px;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      height: 100%;
+      justify-items: center;
+      align-items: center;
+    }
+    .day {
+      width: 35px;
+      height: 35px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .day.completed {
+      background: var(--gradient-primary);
+      box-shadow: 0 2px 6px rgba(0,255,136,0.2);
+    }
+    .day.completed::after {
+      content: "✓";
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      font-size: 10px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .day.missed {
+      background: #ff4d4d;
+    }
+    .day.missed::after {
+      content: "✖";
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      font-size: 10px;
+      color: #fff;
+    }
+    .quote-container {
+      text-align: center;
+      padding: 12px;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-md);
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent);
+      text-shadow: 0 0 8px var(--accent);
+    }
+    .quote-note {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      opacity: 0.8;
+    }
+    /* Center Panel: Fixed Goals and Dashboard */
+    .center-panel {
+      grid-area: center;
+      background: rgba(30,30,30,0.6);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      gap: 16px;
+      width: 100%;
+    }
+    .goals-container, .dashboard {
+      flex: 1;
+    }
+    .goals-container {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+    .goals-container h3 {
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+    }
+    /* Fixed Goals List (Customization removed) */
+    .goal-list {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .goal-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    .goal-item.completed {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    .goal-checkbox {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+    }
+    /* Dashboard Box */
+    .dashboard {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dashboard h3 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    /* Circular Percentage Completion */
+    .completion-circle {
+      width: 100px;
+      height: 100px;
+      border: 4px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 0 auto;
+    }
+    /* Dashboard Grid for additional metrics */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .dashboard-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      text-align: center;
+    }
+    .dashboard-card h4 {
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .dashboard-card p {
+      margin: 0;
+      font-size: 1rem;
+    }
+    /* Right Panel: To Do List, Today's Note & How It Works */
+    .right-panel {
+      grid-area: right;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .todo-container {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+    .todo-input-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .todo-input {
+      flex: 1;
+      background: rgba(255,255,255,0.03);
+      border: none;
+      padding: 6px 10px;
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+    }
+    .todo-list {
+      max-height: 150px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-md);
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+    }
+    .todo-item.completed {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    .todo-checkbox {
+      accent-color: #00ff88;
+      width: 14px;
+      height: 14px;
+    }
+    .delete-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #ff4444;
+      cursor: pointer;
+      padding: 2px;
+      font-size: 0.8rem;
+    }
+    .notes-container {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+    .notes-container h3 {
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    .notes-input {
+      width: 100%;
+      height: 100px;
+      background: rgba(255,255,255,0.03);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 10px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      resize: vertical;
+    }
+    /* Redesigned How It Works Section */
+    .how-it-works {
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+    .how-it-works h3 {
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 4px;
+    }
+    .how-it-works ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .how-it-works li {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 1.2em;
+    }
+    .how-it-works li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="left-top">
+      <div class="top-race-track">
+        <div class="character">🏎️</div>
+      </div>
+      <!-- Money Info and Updated Hydration Text -->
+      <div class="money-info">total money💵-₹1000</div>
+      <div class="hydration-quote">stay hydrated chitraksh!</div>
+      <!-- Digital Clock for IST -->
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="right-top">
+      <!-- Reward Status Button -->
+      <button class="reward-status-btn" onclick="openRewardModal()">Reward Status</button>
+      <!-- Report Button -->
+      <button class="report-btn" onclick="openReportModal()">Report</button>
+      <div class="theme-container">
+        <button class="theme-btn" onclick="toggleThemeDropdown()">Themes</button>
+        <div class="theme-dropdown" id="themeDropdown">
+          <div class="theme-option" onclick="setTheme('default')">Green</div>
+          <div class="theme-option" onclick="setTheme('purple')">Purple</div>
+          <div class="theme-option" onclick="setTheme('red')">Red</div>
+          <div class="theme-option" onclick="setTheme('blue')">Blue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Reward Modal -->
+  <div id="rewardModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">Reward Status</div>
+      <div class="modal-row">
+        <span>Money Earned:</span>
+        <span class="font-bold" id="modalEarnings">₹0</span>
+      </div>
+      <div class="modal-row">
+        <span>Money Lost:</span>
+        <span class="font-bold" id="modalLost">₹0</span>
+      </div>
+      <button class="modal-close" onclick="closeRewardModal()">Close</button>
+    </div>
+  </div>
+  
+  <!-- Report Modal -->
+  <div id="reportModal" class="modal-overlay">
+    <div class="modal-content report-modal">
+      <div class="modal-header">Report an Issue</div>
+      <p>To report any issues, please email <strong>123@gmail.com</strong>.</p>
+      <button class="modal-close" onclick="closeReportModal()">Close</button>
+    </div>
+  </div>
+  
+  <!-- Incomplete Tasks Modal -->
+  <div id="incompleteModal" class="modal-overlay">
+    <div class="incomplete-modal">
+      <div class="modal-header">Incomplete Tasks</div>
+      <p>Tasks pending. Complete them first.</p>
+      <button class="modal-close" onclick="closeIncompleteModal()">OK</button>
+    </div>
+  </div>
+  
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Left Panel: Progress, Calendar, Quote & Note -->
+    <div class="left-panel">
+      <div class="progress-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2>Day <span id="currentDay">0</span>/14</h2>
+            <p>💰 Earned: ₹<span id="earnings">0</span></p>
+          </div>
+          <button onclick="completeDay()">🎯 Complete Day</button>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <p id="rewardStatus" style="margin-top: 8px; font-weight:600;">Reward Status: Keep Going</p>
+      </div>
+      <div class="calendar-container">
+        <div class="calendar" id="calendar"></div>
+      </div>
+      <!-- Quote below Calendar -->
+      <div class="quote-container">
+        BET ON YOURSELF
+      </div>
+      <!-- Note below the quote -->
+      <div class="quote-note">
+        *The earned money will be credited on the final day, Day 14.
+      </div>
+    </div>
+    
+    <!-- Center Panel: Fixed Goals and Dashboard -->
+    <div class="center-panel">
+      <div class="goals-container">
+        <h3>Your 14-Day Challenge Goals</h3>
+        <!-- Fixed list of goals (Customization removed) -->
+        <div class="goal-list" id="goalList"></div>
+      </div>
+      <div class="dashboard">
+        <h3>Dashboard</h3>
+        <!-- Circular Percentage Completion -->
+        <div class="completion-circle">
+          <span id="completionPercentage">0%</span>
+        </div>
+        <!-- Additional Metrics Grid -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h4>Streak</h4>
+            <p id="dashboardStreak">0</p>
+          </div>
+          <div class="dashboard-card">
+            <h4>Earnings</h4>
+            <p id="dashboardEarnings">₹0</p>
+          </div>
+          <div class="dashboard-card">
+            <h4>Completed</h4>
+            <p id="dashboardCompletion">0%</p>
+          </div>
+          <div class="dashboard-card">
+            <h4>Days Left</h4>
+            <p id="dashboardDaysLeft">14</p>
+          </div>
+          <div class="dashboard-card">
+            <h4>Starting Date</h4>
+            <p id="dashboardStartDate">22-03-2025</p>
+          </div>
+          <div class="dashboard-card">
+            <h4>Ending Date</h4>
+            <p id="dashboardEndDate">04-04-2025</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Panel: To Do List, Today's Note & How It Works -->
+    <div class="right-panel">
+      <div class="todo-container">
+        <div class="todo-input-container">
+          <input type="text" class="todo-input" placeholder="Add task..." id="todoInput">
+          <button onclick="addTodo()">➕</button>
+        </div>
+        <div class="todo-list" id="todoList"></div>
+      </div>
+      <div class="notes-container">
+        <h3>Today's Note</h3>
+        <textarea class="notes-input" id="notesInput" placeholder="Write your thoughts here..."></textarea>
+        <button onclick="saveNote()" style="width: 100%;">💾 Save Note</button>
+      </div>
+      <!-- Redesigned How It Works Section -->
+      <div class="how-it-works">
+        <h3>How It Works</h3>
+        <ul>
+          <li><strong>Tick Off Tasks:</strong> Complete all tasks in "Your 14-Day Challenge Goals" before the day ends.</li>
+          <li><strong>Press "Complete Day":</strong> The system will update your progress for the day.</li>
+          <li><strong>Miss the Deadline?</strong> If you don’t mark the day complete before 12:00 AM IST, you'll lose money.</li>
+          <li><strong>Stay Consistent:</strong> Complete your tasks daily to build up your rewards!</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Constants for challenge boundaries
+    const CHALLENGE_START = "2025-03-22"; // YYYY-MM-DD
+    const CHALLENGE_END = "2025-04-04";   // YYYY-MM-DD
+
+    // Helper: Get current IST date string (YYYY-MM-DD)
+    function getISTDateString() {
+      const now = new Date();
+      const istTime = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 60000);
+      const year = istTime.getFullYear();
+      const month = (istTime.getMonth() + 1).toString().padStart(2, '0');
+      const day = istTime.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Theme Functions
+    const themes = {
+      default: {
+        '--gradient-primary': 'linear-gradient(135deg, #00ff88 0%, #4ecdc4 100%)',
+        '--background': '#121212',
+        '--surface': '#1e1e1e',
+        '--text-primary': '#ffffff',
+        '--accent': '#00ff88'
+      },
+      purple: {
+        '--gradient-primary': 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)',
+        '--background': '#1a001a',
+        '--surface': '#2a002a',
+        '--text-primary': '#f0f0f0',
+        '--accent': '#9b59b6'
+      },
+      red: {
+        '--gradient-primary': 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+        '--background': '#300000',
+        '--surface': '#400000',
+        '--text-primary': '#ffffff',
+        '--accent': '#e74c3c'
+      },
+      blue: {
+        '--gradient-primary': 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
+        '--background': '#001a33',
+        '--surface': '#002a44',
+        '--text-primary': '#ffffff',
+        '--accent': '#3498db'
+      }
+    };
+
+    function toggleThemeDropdown() {
+      document.getElementById('themeDropdown').classList.toggle('active');
+    }
+
+    function setTheme(themeName) {
+      const theme = themes[themeName];
+      for (const variable in theme) {
+        document.documentElement.style.setProperty(variable, theme[variable]);
+      }
+      localStorage.setItem('selectedTheme', themeName);
+      toggleThemeDropdown();
+    }
+
+    (function applySavedTheme() {
+      const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+      setTheme(savedTheme);
+    })();
+
+    // Global State - 14-Day Challenge, starting at 0
+    const STATE = {
+      currentDay: 0,
+      totalEarnings: 0,
+      withdrawn: 0,
+      lost: 0,
+      streak: 0,
+      lastCompleteDate: "",
+      todos: [],
+      notes: '',
+      goals: []
+    };
+
+    // Default Goals (fixed, not customizable)
+    const defaultGoals = [
+      { id: 1, text: "Run 5km", completed: false },
+      { id: 2, text: "Meditate for 10 minutes", completed: false },
+      { id: 3, text: "Read a chapter", completed: false }
+    ];
+
+    // On load, if no goals are saved, use default goals
+    if (!localStorage.getItem('goals')) {
+      STATE.goals = defaultGoals;
+      saveState();
+    }
+
+    // Render Goals (fixed list)
+    function renderGoals() {
+      document.getElementById('goalList').innerHTML = STATE.goals.map(goal => `
+        <div class="goal-item ${goal.completed ? 'completed' : ''}">
+          <input type="checkbox" class="goal-checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${goal.id})">
+          <span>${goal.text}</span>
+        </div>
+      `).join('');
+    }
+
+    function toggleGoal(id) {
+      const goal = STATE.goals.find(g => g.id === id);
+      if (goal) {
+        goal.completed = !goal.completed;
+        saveState();
+        renderGoals();
+      }
+    }
+
+    // Todo Functions
+    function addTodo() {
+      const input = document.getElementById('todoInput');
+      const text = input.value.trim();
+      if (text) {
+        STATE.todos.push({ id: Date.now(), text: text, completed: false });
+        input.value = '';
+        saveState();
+        renderTodos();
+      }
+    }
+
+    function toggleTodo(id) {
+      const todo = STATE.todos.find(t => t.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        saveState();
+        renderTodos();
+      }
+    }
+
+    function deleteTodo(id) {
+      STATE.todos = STATE.todos.filter(t => t.id !== id);
+      saveState();
+      renderTodos();
+    }
+
+    function renderTodos() {
+      document.getElementById('todoList').innerHTML = STATE.todos.map(todo => `
+        <div class="todo-item ${todo.completed ? 'completed' : ''}">
+          <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
+          <span>${todo.text}</span>
+          <button class="delete-btn" onclick="deleteTodo(${todo.id})">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    // Notes Function
+    function saveNote() {
+      STATE.notes = document.getElementById('notesInput').value;
+      saveState();
+    }
+
+    // Calendar Functions (14 days, 4x4 grid with missed day indicator)
+    function initCalendar() {
+      const calendar = document.getElementById('calendar');
+      calendar.innerHTML = '';
+      // Compute day difference from challenge start date
+      const challengeStart = new Date("2025-03-22T00:00:00+05:30");
+      const todayIST = new Date(getISTDateString() + "T00:00:00+05:30");
+      const dayDiff = Math.floor((todayIST - challengeStart) / (24 * 60 * 60 * 1000));
+      // Create 16 cells (4 rows x 4 columns)
+      for (let i = 0; i < 16; i++) {
+        const day = document.createElement('div');
+        day.className = 'day';
+        if (i < 14) {
+          day.textContent = i + 1;
+          if (i < STATE.currentDay) {
+            day.classList.add('completed');
+          } else if (i < dayDiff && i >= STATE.currentDay) {
+            day.classList.add('missed');
+          }
+        }
+        calendar.appendChild(day);
+      }
+    }
+
+    // Challenge Functions
+    function completeDay() {
+      const currentDate = getISTDateString();
+      // Enforce challenge boundaries
+      if (currentDate < CHALLENGE_START) {
+        alert(`Your plan starts on ${CHALLENGE_START}`);
+        return;
+      }
+      if (currentDate > CHALLENGE_END) {
+        alert(`Your plan ended on ${CHALLENGE_END}`);
+        return;
+      }
+      // Limit Complete Day to once per day
+      if (STATE.lastCompleteDate === currentDate) {
+        alert("You have already completed today's challenge.");
+        return;
+      }
+      // Check if all goals are complete; if not, show popup
+      const incomplete = STATE.goals.filter(goal => !goal.completed);
+      if (incomplete.length > 0) {
+        document.getElementById('incompleteModal').style.display = 'flex';
+        return;
+      }
+      // Daily amount: ₹1000 ÷ 14 ≈ ₹71.43
+      const dailyAmount = 71.43;
+      STATE.totalEarnings += dailyAmount;
+      STATE.currentDay++;
+      STATE.lastCompleteDate = currentDate;
+      updateProgress();
+      saveState();
+      initCalendar();
+    }
+
+    function updateProgress() {
+      const progress = (STATE.currentDay / 14) * 100;
+      document.querySelector('.progress-fill').style.width = `${progress}%`;
+      document.getElementById('currentDay').textContent = STATE.currentDay;
+      let netEarnings = STATE.totalEarnings - STATE.withdrawn;
+      if(netEarnings < 0) netEarnings = 0;
+      document.getElementById('earnings').textContent = netEarnings.toFixed(2);
+      document.querySelector('.top-race-track .character').style.left = `calc(${progress}% - 50px)`;
+      
+      const rewardStatusEl = document.getElementById('rewardStatus');
+      let statusText = "Keep Going";
+      if (STATE.currentDay >= 14) {
+        statusText = "Gold Reward";
+      } else if (STATE.currentDay >= 10) {
+        statusText = "Silver Reward";
+      } else if (STATE.currentDay >= 5) {
+        statusText = "Bronze Reward";
+      }
+      rewardStatusEl.textContent = "Reward Status: " + statusText;
+      
+      document.getElementById('dashboardStreak').textContent = STATE.currentDay;
+      document.getElementById('dashboardEarnings').textContent = "₹" + netEarnings.toFixed(2);
+      const percent = Math.round((STATE.currentDay / 14) * 100);
+      document.getElementById('dashboardCompletion').textContent = percent + "%";
+      document.getElementById('dashboardDaysLeft').textContent = 14 - STATE.currentDay;
+      document.getElementById('completionPercentage').textContent = percent + "%";
+      
+      document.getElementById('modalEarnings').textContent = "₹" + netEarnings.toFixed(2);
+      document.getElementById('modalLost').textContent = "₹" + STATE.lost.toFixed(2);
+    }
+
+    function loadState() {
+      let parsedGoals = [];
+      try {
+        parsedGoals = JSON.parse(localStorage.getItem('goals'));
+      } catch (e) {
+        parsedGoals = null;
+      }
+      const savedState = {
+        currentDay: Math.min(parseInt(localStorage.getItem('currentDay')) || 0, 14),
+        totalEarnings: parseFloat(localStorage.getItem('totalEarnings')) || 0,
+        withdrawn: parseFloat(localStorage.getItem('withdrawn')) || 0,
+        lost: parseFloat(localStorage.getItem('lost')) || 0,
+        streak: parseInt(localStorage.getItem('streak')) || 0,
+        lastCompleteDate: localStorage.getItem('lastCompleteDate') || "",
+        todos: JSON.parse(localStorage.getItem('todos')) || [],
+        notes: localStorage.getItem('notes') || '',
+        goals: (parsedGoals && Array.isArray(parsedGoals) && parsedGoals.length > 0) ? parsedGoals : defaultGoals
+      };
+      Object.assign(STATE, savedState);
+      document.getElementById('notesInput').value = STATE.notes;
+    }
+
+    function saveState() {
+      localStorage.setItem('currentDay', STATE.currentDay);
+      localStorage.setItem('totalEarnings', STATE.totalEarnings);
+      localStorage.setItem('withdrawn', STATE.withdrawn);
+      localStorage.setItem('lost', STATE.lost);
+      localStorage.setItem('streak', STATE.streak);
+      localStorage.setItem('lastCompleteDate', STATE.lastCompleteDate);
+      localStorage.setItem('todos', JSON.stringify(STATE.todos));
+      localStorage.setItem('notes', STATE.notes);
+      localStorage.setItem('goals', JSON.stringify(STATE.goals));
+    }
+
+    function init() {
+      loadState();
+      initCalendar();
+      updateProgress();
+      renderTodos();
+      renderGoals();
+    }
+
+    init();
+
+    // Reward Modal Functions
+    function openRewardModal() {
+      document.getElementById('rewardModal').style.display = 'flex';
+    }
+
+    function closeRewardModal() {
+      document.getElementById('rewardModal').style.display = 'none';
+    }
+
+    // Report Modal Functions
+    function openReportModal() {
+      document.getElementById('reportModal').style.display = 'flex';
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+
+    // Incomplete Tasks Modal Functions
+    function closeIncompleteModal() {
+      document.getElementById('incompleteModal').style.display = 'none';
+    }
+
+    // Digital Clock for IST
+    function updateClock() {
+      const clockElement = document.getElementById('clock');
+      const now = new Date();
+      const istTime = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 60000);
+      const hours = istTime.getHours().toString().padStart(2, '0');
+      const minutes = istTime.getMinutes().toString().padStart(2, '0');
+      const seconds = istTime.getSeconds().toString().padStart(2, '0');
+      clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
